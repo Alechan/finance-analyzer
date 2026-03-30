@@ -13,3 +13,5 @@ pkg/.DS_Store
 /pdfcardssummarycli
 /web/mockups_lab/tmp_sensitive_data/
 /docs/DISPOSABLE*.md
+/docs/logs_*/
+/docs/.DS_Store

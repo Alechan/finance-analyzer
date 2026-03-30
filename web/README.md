@@ -1,68 +1,67 @@
-## Minimal WASM Demo Shell
+# Web App
 
-> **Reminder:** Update `docs/index.md` if you add, rename, or remove documents.
+This folder contains the static web app for `finance-analyzer`.
 
-This is a tiny static web shell to exercise the Go WASM API end-to-end:
-- load demo CSV + mappings from embedded WASM functions
-- compute all tables
-- preview one selected table
-- export the selected table as CSV
+## What it does
 
-### Local-first data model
+The app loads CSV data, mappings, and workspace state in the browser and renders spending, debt, owner, and data-quality views. The public deployment boots with demo/public data by default.
 
-This static website is 100% local with respect to your finance data. It keeps finance data in the browser on your machine.
+## Does it keep data local?
 
-In the public repo there is:
+Yes. This website is 100% local with respect to your finance data.
+
+In this repo there is:
 1. no application backend,
 2. no server-side database,
 3. no external persistence path for uploaded CSVs, mappings, or workspace state.
 
-Today the app stores its working state in browser storage on the local machine so that:
+Working data lives in browser storage on the local machine so that:
 1. sensitive financial data does not need to leave the device,
 2. the app can be hosted as plain static files,
 3. the public deployment model stays simple and reproducible.
 
 The pinned Highcharts CDN is a runtime dependency for charting code only. It is not used to upload or store your finance data.
 
-### Build the WASM binary
+## Run it locally
 
-From repo root:
-
-```sh
-GOOS=js GOARCH=wasm go build -o web/finance.wasm ./pkg/cmd/financewasm
-```
-
-### Copy `wasm_exec.js`
-
-From repo root:
+From the repo root:
 
 ```sh
-cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/wasm_exec.js
-```
-
-### Run a static server
-
-From repo root:
-
-```sh
-python3 -m http.server 8080 -d web
+cd web
+npm install
+npm run build:wasm
+python3 -m http.server 8080 -d .
 ```
 
 Then open:
 
-```
-http://localhost:8080
+- `http://localhost:8080`
+
+## Build and test
+
+From `web/`:
+
+```sh
+npm run build:wasm
+npm run test:unit
+npm run test:smoke
 ```
 
-### Highcharts runtime
+## Highcharts runtime
 
-The public web app now loads Highcharts from the official pinned CDN instead of a vendored local snapshot:
+The public web app loads Highcharts from the official pinned CDN instead of a vendored local snapshot:
 1. `https://code.highcharts.com/12.5.0/highcharts.js`
 2. `https://code.highcharts.com/12.5.0/themes/dark-unica.js`
 
-That means browser-based runs need network access to `code.highcharts.com`.
+Browser-based runs therefore need network access to `code.highcharts.com`.
 
-### OSS sensitive artifact guard
+## GitHub Pages deployment
+
+The public site is deployed automatically from `main` through GitHub Actions.
+
+See [../docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md) for the deployment flow and post-deploy smoke checks.
+
+## OSS sensitive artifact guard
 
 From `web/`:
 
@@ -70,19 +69,19 @@ From `web/`:
 npm run guard:oss-sensitive
 ```
 
-Optional full-tree scan (expected to fail until private fixture migration is complete):
+Optional full-tree scan:
 
 ```sh
 npm run guard:oss-sensitive:all
 ```
 
-Enable local pre-commit enforcement from repo root:
+Enable local pre-commit enforcement from the repo root:
 
 ```sh
 ./scripts/install-git-hooks.sh
 ```
 
-### UX audit automation
+## UX audit automation
 
 From `web/`:
 
@@ -91,6 +90,5 @@ npm run audit:ux
 ```
 
 Artifacts are written to:
-
 1. `web/output/playwright/ux-audit/ux-audit-summary.json`
 2. `web/output/playwright/ux-audit/ux-audit-*.png`

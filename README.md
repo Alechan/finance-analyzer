@@ -1,100 +1,114 @@
 # finance-analyzer
 
-Personal finance analysis tooling for extracting structured data from supported credit-card statement PDFs and exploring the results in a local-first web app. It focuses on spending, debt, categories, owners, and data quality.
+`finance-analyzer` helps you extract structured CSV data from supported credit-card statement PDFs and explore the results in a local-first web app. Today it is focused on spending, debt, categories, owners, and data-quality checks.
 
-## What can I do with it?
+## What can I use it for?
 
 You can:
-1. extract transactions from supported PDF statements,
-2. inspect the results in the browser without sending financial data to a backend,
+1. extract statement data from supported PDFs,
+2. review the results in a browser without uploading your financial data to a backend,
 3. keep working with your own CSVs and workspace state locally.
 
-## Supported banks
+## Which statements are supported?
 
 The CLI currently supports only:
-1. Santander
-2. Visa Prisma
+1. `Santander`
+2. `Visa Prisma`
 
-## Install The CLI
+If your PDFs come from a different bank, this repo will not parse them correctly without code changes.
 
-From the repo root:
+## How do I install the CLI?
 
-```bash
-go install ./pkg/cmd/pdfcardssummarycli
-```
-
-## Extract PDFs
-
-The CLI reads one or more statement PDFs from the current folder and writes a CSV next to each PDF.
-
-Example: one PDF.
+Install it once with Go:
 
 ```bash
-ls -1
-# march.pdf
-
-pdfcardssummarycli --bank santander march.pdf
-
-ls -1
-# march.pdf
-# march.pdf.csv
+go install github.com/Alechan/finance-analyzer/pkg/cmd/pdfcardssummarycli@latest
 ```
 
-Example: multiple PDFs and one combined CSV.
+If `pdfcardssummarycli` is not on your `PATH`, run it from your Go bin directory instead. On many setups that is `$(go env GOPATH)/bin`.
+
+## How do I extract a PDF?
+
+From the folder that already contains your PDFs:
 
 ```bash
 ls -1
-# jan.pdf
-# feb.pdf
+# 2025-03-santander.pdf
 
-pdfcardssummarycli --bank visa-prisma --join-csvs all.csv jan.pdf feb.pdf
+pdfcardssummarycli --bank santander 2025-03-santander.pdf
 
 ls -1
-# all.csv
-# feb.pdf
-# feb.pdf.csv
-# jan.pdf
-# jan.pdf.csv
+# 2025-03-santander.pdf
+# 2025-03-santander.pdf.csv
 ```
 
-## Use The Web App
+Multiple PDFs plus one combined CSV:
 
-The web app is a static site that keeps your finance data in browser storage on your machine. It does not send CSVs, mappings, or workspace state to a backend because there is no backend in this repo.
+```bash
+ls -1
+# 2025-01-visa.pdf
+# 2025-02-visa.pdf
 
-Why it works this way:
-1. your financial data stays on your device,
-2. the site can be hosted as plain static files,
-3. it stays simple to run locally and on GitHub Pages.
+pdfcardssummarycli --bank visa-prisma --join-csvs joined.csv 2025-01-visa.pdf 2025-02-visa.pdf
 
-From the repo root:
+ls -1
+# 2025-01-visa.pdf
+# 2025-01-visa.pdf.csv
+# 2025-02-visa.pdf
+# 2025-02-visa.pdf.csv
+# joined.csv
+```
+
+The CLI writes one `.csv` next to each input PDF. When you pass `--join-csvs`, it also writes the combined file you requested.
+
+## How do I use the website?
+
+The fastest way to see the app is the hosted demo:
+
+- [https://alechan.github.io/finance-analyzer/](https://alechan.github.io/finance-analyzer/)
+
+To run it locally from this repo:
 
 ```bash
 cd web
 npm install
 npm run build:wasm
+python3 -m http.server 8080 -d .
+```
+
+Then open:
+
+- `http://localhost:8080`
+
+The public site loads demo/public data by default. You can then delete the loaded files or import your own CSVs to work with your own data.
+
+## Does the website upload my data anywhere?
+
+No. The web app is 100% local with respect to your finance data.
+
+In this repo there is:
+1. no application backend,
+2. no server-side database,
+3. no external persistence path for your uploaded CSVs, mappings, or workspace state.
+
+Your data stays in browser storage on your machine. We chose that model so sensitive financial data can stay on-device while the app remains a plain static site that works locally and on GitHub Pages.
+
+The one network dependency in the public web app is the pinned Highcharts CDN for charting code. It fetches JavaScript assets, not your financial data.
+
+## How do I run the checks?
+
+From the repo root:
+
+```bash
+go test ./...
+cd web
+npm install
 npm run test:unit
 npm run test:smoke
 ```
 
-Then open the static site locally with a simple server such as:
+## Where should I look next?
 
-```bash
-python3 -m http.server 8080 -d web
-```
-
-## Repository Layout
-
-The main folders are:
-1. `pkg/` for Go code and CLI/WASM entrypoints
-2. `web/` for the static web app, runtime, storage, and browser tests
-3. `scripts/` for repo utility scripts
-4. `.github/` and `.githooks/` for automation and local guardrails
-5. `docs/` for public documentation and deployment notes
-
-## More Info
-
-The one network dependency in the public web app is the pinned Highcharts CDN for charting code. It fetches JavaScript assets, not your financial data.
-
-## License
-
-MIT. See [LICENSE](./LICENSE).
+1. [web/README.md](./web/README.md) for web-app-specific commands and validation
+2. [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for GitHub Pages deployment details
+3. [LICENSE](./LICENSE) for license terms
