@@ -8,6 +8,22 @@ This is a tiny static web shell to exercise the Go WASM API end-to-end:
 - preview one selected table
 - export the selected table as CSV
 
+### Local-first data model
+
+This static website is 100% local with respect to your finance data. It keeps finance data in the browser on your machine.
+
+In the public repo there is:
+1. no application backend,
+2. no server-side database,
+3. no external persistence path for uploaded CSVs, mappings, or workspace state.
+
+Today the app stores its working state in browser storage on the local machine so that:
+1. sensitive financial data does not need to leave the device,
+2. the app can be hosted as plain static files,
+3. the public deployment model stays simple and reproducible.
+
+The pinned Highcharts CDN is a runtime dependency for charting code only. It is not used to upload or store your finance data.
+
 ### Build the WASM binary
 
 From repo root:

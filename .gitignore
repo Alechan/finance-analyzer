@@ -3,6 +3,7 @@ pkg/.DS_Store
 /.idea/
 /.idea/workspace.xml
 /.playwright-cli/
+/dist/
 /web/finance.wasm
 /web/playwright-report/
 /web/test-results/
