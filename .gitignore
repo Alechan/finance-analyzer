@@ -1,0 +1,13 @@
+pkg/.DS_Store
+**/.DS_Store
+/.idea/
+/.idea/workspace.xml
+/.playwright-cli/
+/web/finance.wasm
+/web/playwright-report/
+/web/test-results/
+/web/__snapshots__/
+/web/output/
+/web/node_modules/
+/pdfcardssummarycli
+/web/mockups_lab/tmp_sensitive_data/

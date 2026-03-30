@@ -1,0 +1,14 @@
+package main
+
+// BankType is a custom type to represent the bank enum.
+type BankType string
+
+var (
+	Santander  BankType = "santander"
+	VisaPrisma BankType = "visa-prisma"
+
+	validBanks = []BankType{
+		Santander,
+		VisaPrisma,
+	}
+)
