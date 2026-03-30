@@ -3,7 +3,7 @@ import { bindSidebarNavigation } from "./shell/sidebar.js";
 
 function resolveAppBasePath(scope = window) {
   const pathname = String((scope.location && scope.location.pathname) || "/");
-  if (pathname === "/" || pathname.endsWith("/index.html")) {
+  if (pathname.endsWith("/") || pathname.endsWith("/index.html")) {
     return "./mockups_lab/";
   }
   return "./";
