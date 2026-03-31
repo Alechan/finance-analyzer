@@ -49,17 +49,27 @@ Multiple PDFs plus one combined CSV:
 
 ```bash
 ls -1
-# 2025-01-visa.pdf
-# 2025-02-visa.pdf
+# 2025-02-21-Santander-AMEX.pdf
+# 2025-02-21-Santander-VISA.pdf
+# 2025-03-21-Santander-AMEX.pdf
+# 2025-03-21-Santander-VISA.pdf
 
-finpdf2csv --bank visa-prisma --join-csvs joined.csv 2025-01-visa.pdf 2025-02-visa.pdf
+finpdf2csv --bank santander --join-csvs COMBINED.csv \
+  2025-02-21-Santander-AMEX.pdf \
+  2025-02-21-Santander-VISA.pdf \
+  2025-03-21-Santander-AMEX.pdf \
+  2025-03-21-Santander-VISA.pdf
 
 ls -1
-# 2025-01-visa.pdf
-# 2025-01-visa.pdf.csv
-# 2025-02-visa.pdf
-# 2025-02-visa.pdf.csv
-# joined.csv
+# 2025-02-21-Santander-AMEX.pdf
+# 2025-02-21-Santander-AMEX.pdf.csv
+# 2025-02-21-Santander-VISA.pdf
+# 2025-02-21-Santander-VISA.pdf.csv
+# 2025-03-21-Santander-AMEX.pdf
+# 2025-03-21-Santander-AMEX.pdf.csv
+# 2025-03-21-Santander-VISA.pdf
+# 2025-03-21-Santander-VISA.pdf.csv
+# COMBINED.csv
 ```
 
 The CLI writes one `.csv` next to each input PDF. When you pass `--join-csvs`, it also writes the combined file you requested.
@@ -83,7 +93,15 @@ Then open:
 
 - `http://localhost:8080`
 
-The public site loads demo/public data by default. You can then delete the loaded files or import your own CSVs to work with your own data.
+The public site loads demo/public data by default. To replace it with your own CSVs:
+
+1. Open `Settings` in the left sidebar.
+2. In `Workspace and loaded files`, select the loaded demo CSV(s) and click `Delete selected`.
+3. Click `Load CSV(s)` in the top bar and choose the CSV files you generated with `finpdf2csv`.
+4. If you also have owner/category mapping CSVs, stay in `Settings` and click `Import mappings`.
+5. Click `Compute` if you want to recompute immediately after importing files or mappings.
+
+Everything stays local in browser storage, so you can repeat that flow with your own files without uploading them to a backend.
 
 ## Does the website upload my data anywhere?
 

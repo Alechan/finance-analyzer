@@ -26,6 +26,8 @@
 }
 
 .sidebar {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   min-height: 0;
   padding: 18px 14px;
@@ -50,6 +52,35 @@
 .brand .title { font-weight: 700; letter-spacing: .2px; }
 
 .nav { display:flex; flex-direction:column; gap: 6px; margin-top: 10px; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.sidebar-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--stroke2);
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.sidebar-github-link:hover {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.12);
+}
+
+.sidebar-github-link svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
 
 .nav button {
   width: 100%;
