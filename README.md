@@ -15,7 +15,7 @@ The CLI currently supports only:
 1. `Santander`
 2. `Visa Prisma`
 
-If your PDFs come from a different bank, this repo will not parse them correctly without code changes.
+Both have been tested in a separate private repo with *~50 PDFs each*. If your PDFs come from a different bank, this repo will not parse them correctly without code changes.
 
 ## How do I install the CLI?
 
