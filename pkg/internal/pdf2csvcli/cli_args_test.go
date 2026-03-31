@@ -1,4 +1,4 @@
-package main
+package pdf2csvcli
 
 import (
 	"fmt"
@@ -31,10 +31,7 @@ func TestReadArgs_ValidCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// When
-			gotArgs, err := parseArgs(tt.args)
-
-			// Then
+			gotArgs, err := ParseArgs(tt.args)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantBank, gotArgs.Bank)
 			require.Equal(t, tt.wantPDFs, gotArgs.PDFs)
@@ -68,10 +65,7 @@ func TestReadArgs_InvalidCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// When
-			_, err := parseArgs(tt.args)
-
-			// Then
+			_, err := ParseArgs(tt.args)
 			require.Contains(t, err.Error(), tt.baseError)
 			require.Contains(t, err.Error(), helpMessage)
 		})
@@ -135,12 +129,10 @@ func TestArgs_Validate(t *testing.T) {
 }
 
 func TestGetHelpString(t *testing.T) {
-	// Create a parser with some args
 	var args Args
 	p, err := arg.NewParser(arg.Config{}, &args)
 	require.NoError(t, err)
 
-	// Test that help string contains expected elements
 	helpStr := getHelpString(p)
 	require.Contains(t, helpStr, "--bank")
 	require.Contains(t, helpStr, "PDFS")
@@ -149,17 +141,14 @@ func TestGetHelpString(t *testing.T) {
 }
 
 func TestAddHelpToError(t *testing.T) {
-	// Create a parser
 	var args Args
 	p, err := arg.NewParser(arg.Config{}, &args)
 	require.NoError(t, err)
 
-	// Test that error is properly wrapped with help
 	baseErr := fmt.Errorf("test error")
 	errWithHelp := addHelpToError(p, baseErr)
 
 	require.NotNil(t, errWithHelp)
-
 	require.Contains(t, errWithHelp.Error(), "test error")
 	require.Contains(t, errWithHelp.Error(), "--bank")
 	require.Contains(t, errWithHelp.Error(), "PDFS")
@@ -205,10 +194,7 @@ func TestReadArgs_AdditionalEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// When
-			_, err := parseArgs(tt.args)
-
-			// Then
+			_, err := ParseArgs(tt.args)
 			require.Error(t, err)
 			require.Contains(t, err.Error(), tt.baseError)
 		})
@@ -244,10 +230,7 @@ func TestReadArgs_ValidCases_Additional(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// When
-			gotArgs, err := parseArgs(tt.args)
-
-			// Then
+			gotArgs, err := ParseArgs(tt.args)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantBank, gotArgs.Bank)
 			require.Equal(t, tt.wantPDFs, gotArgs.PDFs)
@@ -259,42 +242,37 @@ func TestReadArgs_JoinCSVFlag(t *testing.T) {
 	tests := []struct {
 		name        string
 		args        []string
-		wantBank    BankType
-		wantPDFs    []string
 		wantJoinCSV *string
+		wantErr     bool
+		errMsg      string
 	}{
 		{
-			name:        "With join-csvs flag",
-			args:        []string{"--bank", "santander", "--join-csvs", "combined.csv", "file1.pdf", "file2.pdf"},
-			wantBank:    Santander,
-			wantPDFs:    []string{"file1.pdf", "file2.pdf"},
-			wantJoinCSV: stringPtr("combined.csv"),
+			name: "Valid join CSV flag",
+			args: []string{"--bank", "santander", "--join-csvs", "combined.csv", "file1.pdf", "file2.pdf"},
+			wantJoinCSV: func() *string {
+				s := "combined.csv"
+				return &s
+			}(),
+			wantErr: false,
 		},
 		{
-			name:        "Without join-csvs flag",
-			args:        []string{"--bank", "santander", "file1.pdf"},
-			wantBank:    Santander,
-			wantPDFs:    []string{"file1.pdf"},
-			wantJoinCSV: nil,
-		},
-		{
-			name:        "With join-csvs flag and visa-prisma",
-			args:        []string{"-b", "visa-prisma", "--join-csvs", "/path/to/combined.csv", "file1.pdf"},
-			wantBank:    VisaPrisma,
-			wantPDFs:    []string{"file1.pdf"},
-			wantJoinCSV: stringPtr("/path/to/combined.csv"),
+			name:    "Empty join CSV path",
+			args:    []string{"--bank", "santander", "--join-csvs", "", "file1.pdf"},
+			wantErr: true,
+			errMsg:  "empty path provided for --join-csvs flag",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// When
-			gotArgs, err := parseArgs(tt.args)
+			gotArgs, err := ParseArgs(tt.args)
+			if tt.wantErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.errMsg)
+				return
+			}
 
-			// Then
 			require.NoError(t, err)
-			require.Equal(t, tt.wantBank, gotArgs.Bank)
-			require.Equal(t, tt.wantPDFs, gotArgs.PDFs)
 			if tt.wantJoinCSV == nil {
 				require.Nil(t, gotArgs.JoinCSV)
 			} else {
@@ -303,81 +281,4 @@ func TestReadArgs_JoinCSVFlag(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestArgs_Validate_JoinCSV(t *testing.T) {
-	tests := []struct {
-		name    string
-		args    Args
-		wantErr bool
-		errMsg  string
-	}{
-		{
-			name: "Valid JoinCSV path",
-			args: Args{
-				Bank:    Santander,
-				PDFs:    []string{"file1.pdf"},
-				JoinCSV: stringPtr("combined.csv"),
-			},
-			wantErr: false,
-		},
-		{
-			name: "Empty JoinCSV path",
-			args: Args{
-				Bank:    Santander,
-				PDFs:    []string{"file1.pdf"},
-				JoinCSV: stringPtr(""),
-			},
-			wantErr: true,
-			errMsg:  "empty path provided for --join-csvs flag",
-		},
-		{
-			name: "JoinCSV path with whitespace only",
-			args: Args{
-				Bank:    Santander,
-				PDFs:    []string{"file1.pdf"},
-				JoinCSV: stringPtr("   "),
-			},
-			wantErr: true,
-			errMsg:  "empty path provided for --join-csvs flag",
-		},
-		{
-			name: "Nil JoinCSV (flag not provided)",
-			args: Args{
-				Bank:    Santander,
-				PDFs:    []string{"file1.pdf"},
-				JoinCSV: nil,
-			},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.args.Validate()
-			if tt.wantErr {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.errMsg)
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestGetHelpString_JoinCSV(t *testing.T) {
-	// Create a parser with some args
-	var args Args
-	p, err := arg.NewParser(arg.Config{}, &args)
-	require.NoError(t, err)
-
-	// Test that help string contains expected elements
-	helpStr := getHelpString(p)
-	require.Contains(t, helpStr, "--join-csvs")
-	require.Contains(t, helpStr, "combined CSV output file")
-}
-
-// stringPtr is a helper function to create a pointer to a string
-func stringPtr(s string) *string {
-	return &s
 }

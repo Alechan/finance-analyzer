@@ -1,4 +1,4 @@
-package main
+package pdf2csvcli
 
 // BankType is a custom type to represent the bank enum.
 type BankType string

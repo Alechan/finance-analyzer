@@ -1,4 +1,4 @@
-package main
+package pdf2csvcli
 
 import (
 	"fmt"
@@ -8,9 +8,8 @@ import (
 	"github.com/Alechan/finance-analyzer/pkg/internal/pdfcardsummaryio"
 )
 
-// extractorFactory creates a new PDF card summary extractor based on the bank type.
-// This function will be extended as more bank types are supported.
-func extractorFactory(bankType BankType) (pdfcardsummaryio.Extractor, error) {
+// ExtractorFactory creates a new PDF card summary extractor based on the bank type.
+func ExtractorFactory(bankType BankType) (pdfcardsummaryio.Extractor, error) {
 	switch bankType {
 	case Santander:
 		return santander.NewSantanderExtractorFromDefaultCfg(), nil

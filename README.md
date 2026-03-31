@@ -22,10 +22,12 @@ If your PDFs come from a different bank, this repo will not parse them correctly
 Install it once with Go:
 
 ```bash
-go install github.com/Alechan/finance-analyzer/pkg/cmd/pdfcardssummarycli@latest
+go install github.com/Alechan/finance-analyzer/pkg/cmd/pdf2csv@latest
 ```
 
-If `pdfcardssummarycli` is not on your `PATH`, run it from your Go bin directory instead. On many setups that is `$(go env GOPATH)/bin`.
+If `pdf2csv` is not on your `PATH`, run it from your Go bin directory instead. On many setups that is `$(go env GOPATH)/bin`.
+
+The older `pdfcardssummarycli` command is still available as a compatibility alias, but `pdf2csv` is the preferred name.
 
 ## How do I extract a PDF?
 
@@ -35,7 +37,7 @@ From the folder that already contains your PDFs:
 ls -1
 # 2025-03-santander.pdf
 
-pdfcardssummarycli --bank santander 2025-03-santander.pdf
+pdf2csv --bank santander 2025-03-santander.pdf
 
 ls -1
 # 2025-03-santander.pdf
@@ -49,7 +51,7 @@ ls -1
 # 2025-01-visa.pdf
 # 2025-02-visa.pdf
 
-pdfcardssummarycli --bank visa-prisma --join-csvs joined.csv 2025-01-visa.pdf 2025-02-visa.pdf
+pdf2csv --bank visa-prisma --join-csvs joined.csv 2025-01-visa.pdf 2025-02-visa.pdf
 
 ls -1
 # 2025-01-visa.pdf

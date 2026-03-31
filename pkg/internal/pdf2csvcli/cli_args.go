@@ -1,4 +1,4 @@
-package main
+package pdf2csvcli
 
 import (
 	"bytes"
@@ -10,9 +10,8 @@ import (
 	"github.com/alexflint/go-arg"
 )
 
-// parseArgs parses the command line arguments. It is usually called passing os.Args[1:].
-func parseArgs(rawArgs []string) (Args, error) {
-	// Check for duplicate bank flags
+// ParseArgs parses the command line arguments. It is usually called passing os.Args[1:].
+func ParseArgs(rawArgs []string) (Args, error) {
 	a, err2 := preValidation(rawArgs)
 	if err2 != nil {
 		return a, err2
@@ -37,7 +36,6 @@ func parseArgs(rawArgs []string) (Args, error) {
 	return args, nil
 }
 
-// preValidation performs preliminary checks on the raw arguments to ensure they meet basic requirements.
 func preValidation(rawArgs []string) (Args, error) {
 	bankFlagCount := 0
 	for i := 0; i < len(rawArgs); i++ {
@@ -59,7 +57,6 @@ type Args struct {
 }
 
 func (a Args) Validate() error {
-	// Validate bank is one of the valid banks
 	if !slices.Contains(validBanks, a.Bank) {
 		return fmt.Errorf(
 			"error processing --bank: bank type %s is not one of the supported banks: %v",
@@ -68,25 +65,21 @@ func (a Args) Validate() error {
 		)
 	}
 
-	// Validate PDFs
 	if len(a.PDFs) == 0 {
 		return fmt.Errorf("no PDF files provided")
 	}
 
 	for _, pdf := range a.PDFs {
-		// Check for empty PDF name
 		if strings.TrimSpace(pdf) == "" {
 			return fmt.Errorf("empty PDF file name provided")
 		}
 
-		// Check file extension
 		ext := strings.ToLower(filepath.Ext(pdf))
 		if ext != ".pdf" {
 			return fmt.Errorf("file %s does not have a .pdf extension", pdf)
 		}
 	}
 
-	// Validate JoinCSV path if provided
 	if a.JoinCSV != nil {
 		if strings.TrimSpace(*a.JoinCSV) == "" {
 			return fmt.Errorf("empty path provided for --join-csvs flag")
@@ -99,12 +92,10 @@ func (a Args) Validate() error {
 func getHelpString(p *arg.Parser) string {
 	var buf bytes.Buffer
 	p.WriteHelp(&buf)
-	result := buf.String() // Output is in result
-	return result
+	return buf.String()
 }
 
 func addHelpToError(p *arg.Parser, baseError error) error {
 	helpStr := getHelpString(p)
-	errorWithHelp := fmt.Errorf("%w\n\n%s", baseError, helpStr)
-	return errorWithHelp
+	return fmt.Errorf("%w\n\n%s", baseError, helpStr)
 }
