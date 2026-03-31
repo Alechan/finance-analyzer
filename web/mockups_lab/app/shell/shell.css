@@ -172,7 +172,7 @@
 .topbar .actions {
   display:flex;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content:flex-end;
   align-items: flex-start;
 }

@@ -959,7 +959,17 @@ test("finance-overview wires workspace and loaded-files lifecycle parity control
   assert.match(source, /fo-import-workspace-btn/);
   assert.match(source, /fo-workspace-file-input/);
   assert.match(source, /fo-export-workspace-btn/);
+  assert.match(source, /fo-load-demo-btn/);
   assert.match(source, /Replace current data with workspace\?/);
+  assert.match(source, /Replace current data with demo data\?/);
+});
+
+test("integrated mockup topbar exposes an explicit reload-demo action", async () => {
+  const html = await fs.readFile(path.join(WEB_ROOT, "index.html"), "utf8");
+
+  assert.match(html, /id="fo-export-workspace-btn"/);
+  assert.match(html, /id="fo-load-demo-btn"/);
+  assert.match(html, />Reload demo data</);
 });
 
 test("finance-overview wires storage telemetry and fallback banner hooks in integrated mockup", async () => {

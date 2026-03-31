@@ -668,7 +668,7 @@
     var runtime = await getRuntimeModule();
     var bundle = await runtime.loadMockupBundle({
       basePath: bootConfig.basePath,
-      preferStorage: false,
+      preferStorage: true,
       loadProfile: bootConfig.loadProfile
     });
     var bundleCompute = await runtime.computeBundle(bundle, {
@@ -1765,30 +1765,13 @@
   }
 
   async function loadDemoBundle() {
-    if (typeof global.demoCSV !== "function" || typeof global.demoMappingsJSON !== "function") {
-      throw new Error("Demo helpers are unavailable in this runtime scope.");
-    }
     var runtime = await getRuntimeModule();
-    var demoCsv = readOkValue(global.demoCSV(), "demoCSV");
-    runtime.parseCsvAsObjects(demoCsv, runtime.DATA_HEADERS, "demo.csv");
-
-    var mappingsText = readOkValue(global.demoMappingsJSON(), "demoMappingsJSON");
-    var mappingsObj = {};
-    if (String(mappingsText || "").trim()) {
-      mappingsObj = JSON.parse(mappingsText);
-    }
-
-    return {
-      source: "demo",
-      csvFiles: [
-        {
-          name: "demo.csv",
-          content: demoCsv,
-          createdAt: Math.floor(Date.now() / 1000)
-        }
-      ],
-      mappingsObj: cloneMappingsObject(mappingsObj)
-    };
+    var bootConfig = activeBootConfig || createBootConfig({});
+    return runtime.loadMockupBundle({
+      basePath: bootConfig.basePath,
+      preferStorage: false,
+      loadProfile: "public"
+    });
   }
 
   async function importCsvFilesAndCompute(fileList) {
@@ -2280,15 +2263,22 @@
     if (loadDemoBtn) {
       loadDemoBtn.addEventListener("click", async function () {
         await runLifecycleAction("load-demo", async function () {
-          setLiveStatus("Loading embedded demo dataset...", true);
-          setLifecycleStatus("Loading embedded demo dataset...");
+          var current = getCurrentBundle();
+          var hasCurrentCsvFiles = Array.isArray(current.csvFiles) && current.csvFiles.length > 0;
+          if (hasCurrentCsvFiles || hasAnyMappings(current.mappingsObj)) {
+            if (!global.confirm("Replace current data with demo data?")) {
+              return;
+            }
+          }
+          setLiveStatus("Reloading public demo dataset...", true);
+          setLifecycleStatus("Reloading public demo dataset...");
           try {
             var demoBundle = await loadDemoBundle();
             var model = await runBundleComputeAndRender(demoBundle);
             var storageWarning = await tryPersistBundleToStorage(demoBundle);
             var tableCount = toFiniteNumber(model.runtime && model.runtime.tableCount);
             var message =
-              "Loaded demo dataset. Recomputed " +
+              "Reloaded demo dataset. Recomputed " +
               toLocale(tableCount, 0, 0) +
               " table(s).";
             if (storageWarning) {
@@ -2298,11 +2288,12 @@
             setLiveStatus(message, false);
           } catch (err) {
             var errorMessage = err && err.message ? err.message : String(err);
-            setLifecycleStatus("Load demo failed: " + errorMessage);
-            setLiveStatus("Load demo failed: " + errorMessage, false);
+            setLifecycleStatus("Reload demo failed: " + errorMessage);
+            setLiveStatus("Reload demo failed: " + errorMessage, false);
           }
         });
       });
+      loadDemoBtn.title = "Replace the current workspace with the public demo dataset.";
     }
 
     if (importMappingsBtn && importMappingsInput) {

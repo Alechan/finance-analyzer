@@ -9,14 +9,14 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
   use: {
-    baseURL: externalBaseURL || "http://127.0.0.1:8080",
+    baseURL: externalBaseURL || "http://127.0.0.1:8180",
     headless: true,
   },
   webServer: skipWebServer
     ? undefined
     : {
-        command: "python3 -m http.server 8080 -d .",
-        port: 8080,
-        reuseExistingServer: true,
+        command: "python3 -m http.server 8180 -d .",
+        port: 8180,
+        reuseExistingServer: false,
       },
 });
