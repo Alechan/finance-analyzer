@@ -314,6 +314,20 @@
 
     loadModel(bootConfig)
       .then(function (model) {
+        if (model && model.emptyWorkspace) {
+          clearBlockingOverlay();
+          showEmptyWorkspaceOverlay();
+          setBootState("ready");
+          syncLifecycleUiFromState();
+          setLiveStatus(
+            "No CSV files loaded. Load CSV(s), import a workspace, or reload demo data to continue.",
+            false
+          );
+          setLifecycleStatus(
+            "No CSV files loaded. Load CSV(s), import a workspace, or reload demo data to continue."
+          );
+          return;
+        }
         renderVariant(bootConfig.variant, model);
         setBootState("ready");
         syncLifecycleUiFromState();
@@ -582,6 +596,15 @@
               button.click();
             }
           }
+        },
+        {
+          label: "Reload demo data",
+          onClick: function () {
+            var button = document.getElementById("fo-load-demo-btn");
+            if (button && typeof button.click === "function") {
+              button.click();
+            }
+          }
         }
       ]
     );
@@ -671,6 +694,31 @@
       preferStorage: true,
       loadProfile: bootConfig.loadProfile
     });
+    if (!Array.isArray(bundle.csvFiles) || bundle.csvFiles.length === 0) {
+      lastRuntimeState = {
+        bundle: bundle,
+        compute: null,
+        wasmExecPath: bootConfig.wasmExecPath,
+        wasmPath: bootConfig.wasmPath
+      };
+      lastRenderedModel = null;
+      setRuntimeMarkers(
+        {
+          source: bundle.source || "storage",
+          tableCount: 0
+        },
+        "strict"
+      );
+      return {
+        emptyWorkspace: true,
+        latestMonth: "N/A",
+        runtimeMode: "strict",
+        runtime: {
+          source: bundle.source || "storage",
+          tableCount: 0
+        }
+      };
+    }
     var bundleCompute = await runtime.computeBundle(bundle, {
       wasmExecPath: bootConfig.wasmExecPath,
       wasmPath: bootConfig.wasmPath,

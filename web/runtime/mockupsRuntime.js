@@ -399,7 +399,16 @@ function toRuntimeBundle(csvFiles, mappingsObj, source) {
 
 export async function restoreBundleFromStorage(storage = defaultStorage()) {
   const [csvFiles, config] = await Promise.all([storage.getAllCsvFiles(), storage.getConfig()]);
+  const hasStoredConfig = !!config;
   if (!Array.isArray(csvFiles) || csvFiles.length === 0) {
+    if (!hasStoredConfig) {
+      return null;
+    }
+    const mappingsObj = config?.data && typeof config.data === "object" ? config.data : {};
+    return toRuntimeBundle([], mappingsObj, "storage");
+  }
+
+  if (!hasStoredConfig) {
     return null;
   }
 

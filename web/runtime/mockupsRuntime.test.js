@@ -8,6 +8,7 @@ import {
   bundleFromDataFiles,
   bundleFromRequiredFiles,
   loadRequiredFiles,
+  restoreBundleFromStorage,
   loadMockupBundle,
   computeBundle,
   exportTableCSV,
@@ -201,6 +202,62 @@ test("loadMockupBundle prefers storage and skips network when data exists", asyn
   assert.strictEqual(bundle.csvFiles.length, 1);
   assert.strictEqual(bundle.mappingsObj.ownersByCardOwner.Alice, "A");
   assert.strictEqual(bundle.mappingsObj.categorySegmentByCategory.Food, "essential");
+});
+
+test("restoreBundleFromStorage returns an explicit empty bundle when config exists without CSV files", async () => {
+  const storage = {
+    getAllCsvFiles: async () => [],
+    getConfig: async () => ({
+      data: {
+        ownersByCardOwner: {},
+        categoryByDetail: { SUPERMARKET: "Food" },
+        ownersByCardNumber: {},
+        categorySegmentByCategory: { Food: "essential" },
+      },
+    }),
+  };
+
+  const bundle = await restoreBundleFromStorage(storage);
+
+  assert.ok(bundle);
+  assert.strictEqual(bundle.source, "storage");
+  assert.deepStrictEqual(bundle.csvFiles, []);
+  assert.strictEqual(bundle.mappingsObj.categoryByDetail.SUPERMARKET, "Food");
+});
+
+test("loadMockupBundle prefers explicit empty storage state and skips network", async () => {
+  const storage = {
+    getAllCsvFiles: async () => [],
+    getConfig: async () => ({
+      data: {
+        ownersByCardOwner: {},
+        categoryByDetail: {},
+        ownersByCardNumber: {},
+        categorySegmentByCategory: {},
+      },
+    }),
+    clearAll: async () => {
+      throw new Error("should not clear");
+    },
+    putCsvFile: async () => {
+      throw new Error("should not persist csv");
+    },
+    putConfig: async () => {
+      throw new Error("should not persist config");
+    },
+  };
+
+  const bundle = await loadMockupBundle({
+    basePath: "/ignored/",
+    storage,
+    fetchImpl: async () => {
+      throw new Error("network should not be used");
+    },
+  });
+
+  assert.strictEqual(bundle.source, "storage");
+  assert.deepStrictEqual(bundle.csvFiles, []);
+  assert.deepStrictEqual(bundle.mappingsObj.ownersByCardOwner, {});
 });
 
 test("loadMockupBundle falls back to files and persists bundle", async () => {

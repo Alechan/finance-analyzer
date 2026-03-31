@@ -972,6 +972,19 @@ test("integrated mockup topbar exposes an explicit reload-demo action", async ()
   assert.match(html, />Reload demo data</);
 });
 
+test("empty workspace overlay offers load, import, and demo reset actions", async () => {
+  const source = await fs.readFile(
+    path.join(WEB_ROOT, "mockups_lab", "shared", "finance-overview.js"),
+    "utf8"
+  );
+
+  assert.match(source, /No CSV files loaded/);
+  assert.match(source, /Load CSV\(s\) or import a workspace to continue\./);
+  assert.match(source, /label:\s*"Load CSV\(s\)"/);
+  assert.match(source, /label:\s*"Import workspace"/);
+  assert.match(source, /label:\s*"Reload demo data"/);
+});
+
 test("finance-overview wires storage telemetry and fallback banner hooks in integrated mockup", async () => {
   const source = await fs.readFile(
     path.join(WEB_ROOT, "mockups_lab", "shared", "finance-overview.js"),
