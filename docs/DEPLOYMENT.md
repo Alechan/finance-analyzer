@@ -33,6 +33,11 @@ For a fuller end-to-end check, run the deployed Playwright smoke locally against
 
 This local/manual check is stricter than the GitHub Actions one because it opens the site in a browser and waits for the app to finish booting.
 
+URL resolution for the complete test uses this order:
+1. `PLAYWRIGHT_BASE_URL`
+2. `web/.deployed-site-url` if present locally
+3. default fallback: `https://alechan.github.io/finance-analyzer/`
+
 ## Local validation before pushing
 
 From the repo root:
@@ -56,7 +61,7 @@ PLAYWRIGHT_BASE_URL=https://alechan.github.io/finance-analyzer/ npm --prefix web
 To run the complete deployed-site smoke locally against the live site:
 
 ```bash
-PLAYWRIGHT_BASE_URL=https://alechan.github.io/finance-analyzer/ PLAYWRIGHT_SKIP_WEBSERVER=1 npm --prefix web run test:smoke:deployed
+npm --prefix web run test:smoke:deployed:complete
 ```
 
 To run the complete deployed-site smoke locally against a built Pages artifact:
@@ -64,5 +69,5 @@ To run the complete deployed-site smoke locally against a built Pages artifact:
 ```bash
 bash scripts/build-pages-output.sh
 node web/scripts/serve-no-store.mjs --root dist/pages --port 8787 --host 127.0.0.1
-PLAYWRIGHT_BASE_URL=http://127.0.0.1:8787/ PLAYWRIGHT_SKIP_WEBSERVER=1 npm --prefix web run test:smoke:deployed
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:8787/ npm --prefix web run test:smoke:deployed:complete
 ```

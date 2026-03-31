@@ -11,6 +11,10 @@ pkg/.DS_Store
 /web/output/
 /web/node_modules/
 /pdfcardssummarycli
+/pdf2csv
+/finpdf2csv
+/test-results/
+/web/.deployed-site-url
 /web/mockups_lab/tmp_sensitive_data/
 /docs/DISPOSABLE*.md
 /docs/logs_*/
