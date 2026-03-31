@@ -996,6 +996,32 @@ test("blocking startup overlay offers demo reset only for recoverable data\/conf
   assert.match(source, /error parsing csv\|could not be fetched\|could not be loaded\|could not be validated/);
   assert.match(source, /var actions = isRecoverableDataConfigError\(message\)/);
   assert.match(source, /label:\s*"Reload demo data"/);
+  assert.match(source, /triggerReloadDemoData\(\{ fromBlockingOverlay: true \}\)/);
+});
+
+test("reload-demo control can recover even before a runtime bundle exists", async () => {
+  const source = await fs.readFile(
+    path.join(WEB_ROOT, "mockups_lab", "shared", "finance-overview.js"),
+    "utf8"
+  );
+
+  assert.match(source, /function getCurrentBundleIfAvailable\(\)/);
+  assert.match(source, /async function reloadDemoData\(options\)/);
+  assert.match(source, /var current = getCurrentBundleIfAvailable\(\) \|\| \{ csvFiles: \[\], mappingsObj: \{\} \};/);
+  assert.match(source, /return runLifecycleAction\("load-demo", async function \(\) \{/);
+  assert.match(source, /Object\.assign\(\{\}, activeBootConfig \|\| createBootConfig\(\{\}\), \{\s*loadProfile: LOAD_PROFILE\.PUBLIC/);
+});
+
+test("blocking startup recovery surfaces reload-demo failures back into the overlay", async () => {
+  const source = await fs.readFile(
+    path.join(WEB_ROOT, "mockups_lab", "shared", "finance-overview.js"),
+    "utf8"
+  );
+
+  assert.match(source, /var failureMessage = "Reload demo failed: " \+ errorMessage/);
+  assert.match(source, /settings\.fromBlockingOverlay/);
+  assert.match(source, /document\.body && document\.body\.dataset\.foBootState === "error"/);
+  assert.match(source, /showBlockingError\(failureMessage\)/);
 });
 
 test("finance-overview wires storage telemetry and fallback banner hooks in integrated mockup", async () => {

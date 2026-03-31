@@ -556,13 +556,6 @@
     document.body.appendChild(overlay);
   }
 
-  function clickLoadDemoButton() {
-    var button = document.getElementById("fo-load-demo-btn");
-    if (button && typeof button.click === "function") {
-      button.click();
-    }
-  }
-
   function isRecoverableDataConfigError(message) {
     var text = String(message || "");
     if (!text) {
@@ -586,7 +579,9 @@
       ? [
           {
             label: "Reload demo data",
-            onClick: clickLoadDemoButton
+            onClick: function () {
+              void triggerReloadDemoData({ fromBlockingOverlay: true });
+            }
           }
         ]
       : [];
@@ -628,7 +623,9 @@
         },
         {
           label: "Reload demo data",
-          onClick: clickLoadDemoButton
+          onClick: function () {
+            void triggerReloadDemoData({ fromBlockingOverlay: true });
+          }
         }
       ]
     );
@@ -1550,6 +1547,10 @@
     return lastRuntimeState.bundle;
   }
 
+  function getCurrentBundleIfAvailable() {
+    return lastRuntimeState && lastRuntimeState.bundle ? lastRuntimeState.bundle : null;
+  }
+
   async function runBundleComputeAndRender(bundle) {
     var runtime = await getRuntimeModule();
     var bootConfig = activeBootConfig || createBootConfig({});
@@ -1838,11 +1839,65 @@
 
   async function loadDemoBundle() {
     var runtime = await getRuntimeModule();
-    var bootConfig = activeBootConfig || createBootConfig({});
+    var bootConfig = createBootConfig(
+      Object.assign({}, activeBootConfig || createBootConfig({}), {
+        loadProfile: LOAD_PROFILE.PUBLIC
+      })
+    );
+    activeBootConfig = bootConfig;
     return runtime.loadMockupBundle({
       basePath: bootConfig.basePath,
       preferStorage: false,
-      loadProfile: "public"
+      loadProfile: bootConfig.loadProfile
+    });
+  }
+
+  async function reloadDemoData(options) {
+    var settings = options || {};
+    var current = getCurrentBundleIfAvailable() || { csvFiles: [], mappingsObj: {} };
+    var hasCurrentCsvFiles = Array.isArray(current.csvFiles) && current.csvFiles.length > 0;
+    if (hasCurrentCsvFiles || hasAnyMappings(current.mappingsObj)) {
+      if (!global.confirm("Replace current data with demo data?")) {
+        return false;
+      }
+    }
+    setLiveStatus("Reloading public demo dataset...", true);
+    setLifecycleStatus("Reloading public demo dataset...");
+    try {
+      var demoBundle = await loadDemoBundle();
+      var model = await runBundleComputeAndRender(demoBundle);
+      var storageWarning = await tryPersistBundleToStorage(demoBundle);
+      var tableCount = toFiniteNumber(model.runtime && model.runtime.tableCount);
+      var message =
+        "Reloaded demo dataset. Recomputed " +
+        toLocale(tableCount, 0, 0) +
+        " table(s).";
+      if (storageWarning) {
+        message += " Storage warning: " + storageWarning;
+      }
+      setLifecycleStatus(message);
+      setLiveStatus(message, false);
+      return true;
+    } catch (err) {
+      var errorMessage = err && err.message ? err.message : String(err);
+      var failureMessage = "Reload demo failed: " + errorMessage;
+      setLifecycleStatus(failureMessage);
+      setLiveStatus(failureMessage, false);
+      if (
+        settings.fromBlockingOverlay ||
+        (document.body && document.body.dataset.foBootState === "error") ||
+        document.getElementById("fo-error-overlay")
+      ) {
+        setBootState("error");
+        showBlockingError(failureMessage);
+      }
+      return false;
+    }
+  }
+
+  async function triggerReloadDemoData(options) {
+    return runLifecycleAction("load-demo", async function () {
+      return reloadDemoData(options);
     });
   }
 
@@ -2334,36 +2389,7 @@
 
     if (loadDemoBtn) {
       loadDemoBtn.addEventListener("click", async function () {
-        await runLifecycleAction("load-demo", async function () {
-          var current = getCurrentBundle();
-          var hasCurrentCsvFiles = Array.isArray(current.csvFiles) && current.csvFiles.length > 0;
-          if (hasCurrentCsvFiles || hasAnyMappings(current.mappingsObj)) {
-            if (!global.confirm("Replace current data with demo data?")) {
-              return;
-            }
-          }
-          setLiveStatus("Reloading public demo dataset...", true);
-          setLifecycleStatus("Reloading public demo dataset...");
-          try {
-            var demoBundle = await loadDemoBundle();
-            var model = await runBundleComputeAndRender(demoBundle);
-            var storageWarning = await tryPersistBundleToStorage(demoBundle);
-            var tableCount = toFiniteNumber(model.runtime && model.runtime.tableCount);
-            var message =
-              "Reloaded demo dataset. Recomputed " +
-              toLocale(tableCount, 0, 0) +
-              " table(s).";
-            if (storageWarning) {
-              message += " Storage warning: " + storageWarning;
-            }
-            setLifecycleStatus(message);
-            setLiveStatus(message, false);
-          } catch (err) {
-            var errorMessage = err && err.message ? err.message : String(err);
-            setLifecycleStatus("Reload demo failed: " + errorMessage);
-            setLiveStatus("Reload demo failed: " + errorMessage, false);
-          }
-        });
+        await triggerReloadDemoData();
       });
       loadDemoBtn.title = "Replace the current workspace with the public demo dataset.";
     }
